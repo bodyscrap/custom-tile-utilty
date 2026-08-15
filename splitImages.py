@@ -25,6 +25,7 @@ marginの符号が反転した設定と同じとして扱う。
 import cv2
 import json
 import os
+import shutil
 import numpy as np
 import glob
 
@@ -67,9 +68,11 @@ def splitImage(img, setting, use_only_inner=False):
         buffer_h = setting["tile_height"] + (rows - 1) * setting["stride_v"] + setting["margin"] * 2
         # 値が0のバッファを確保
         src_buf = np.zeros((buffer_h, buffer_w, 3), dtype=np.uint8)
-        # バッファの中心に元画像を配置
+        # 切り取る内部領域のみをバッファにコピー
         offset_x = 0
         offset_y = 0
+        src_h = buffer_h
+        src_w = buffer_w
         src_buf = img[offset_y:offset_y+buffer_h, offset_x:offset_x+buffer_w]
     else:
         # 前元画像を含めるようにマージンを付加する場合
@@ -118,6 +121,8 @@ def saveTileImages(tiles, tile_setting, dst_dir):
         tile_settin : 分割設定
         dst_dir : 保存先ディレクトリ
     '''
+    if os.path.exists(dst_dir):
+        shutil.rmtree(dst_dir)
     os.makedirs(dst_dir, exist_ok=True)
     # 桁数を計算
     num = len(tiles)
@@ -158,9 +163,9 @@ if __name__ == "__main__":
     path_img = "debug_data/beers.jpg"
     img = cv2.imread(path_img)
     # 出力ディレクトリ設定
-    dst_dir = "result3"
+    dst_dir = "result1"
     os.makedirs(dst_dir, exist_ok=True)
     # 画像の分割
-    tiles, src_buf, tile_setting = splitImage(img, setting, use_only_inner=True)
+    tiles, src_buf, tile_setting = splitImage(img, setting, use_only_inner=False)
     # タイル画像の保存
     saveTileImages(tiles, tile_setting, dst_dir)
